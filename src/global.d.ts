@@ -22,9 +22,12 @@ export interface IImage {
   url: string;
   name: string;
   type: 'jpg' | 'png' | 'jpeg';
+  id: string;
 }
 
 export type IImageProps = {
   onDelete: () => void;
   onRename?: () => void;
+  index: number;
+  onMove: (dragIndex: number, hoverIndex: number) => void;
 } & IImage;

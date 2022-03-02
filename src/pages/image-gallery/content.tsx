@@ -1,8 +1,18 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
 import ImageListItem from '@/components/ImageListItem';
 import type { IImage } from '@/global';
 import { FolderContext } from './index';
 import { Button, Input } from 'antd';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import update from 'immutability-helper';
 
 const { Search } = Input;
 
@@ -29,6 +39,7 @@ export default function ImageGalleryContent() {
             url: `https://picsum.photos/200/200?random=${selectedFolder.id}${
               index + 1
             }`,
+            id: `${selectedFolder.id}${index + 1}`,
             name: `图片${index + 1}`,
             type:
               Math.random() < 0.33
@@ -47,6 +58,7 @@ export default function ImageGalleryContent() {
       url: `https://picsum.photos/200/200?random=${selectedFolder.id}${
         newImageList.length + 1
       }`,
+      id: `${selectedFolder.id}${newImageList.length + 1}`,
       name: `图片${newImageList.length + 1}`,
       type: Math.random() < 0.33 ? 'jpg' : Math.random() < 0.5 ? 'png' : 'jpeg',
     });
@@ -54,11 +66,37 @@ export default function ImageGalleryContent() {
     return;
   };
 
+  const renderImageItem = useCallback((image, index) => {
+    return (
+      <ImageListItem
+        key={image.id}
+        url={image.url}
+        name={image.name}
+        type={image.type}
+        id={image.id}
+        index={index}
+        onMove={handleMove}
+        onDelete={() => handleDelete(index)}
+      />
+    );
+  }, []);
+
   const handleDelete = (index: number) => {
     const newImageList = imageList.slice();
     newImageList?.splice(index, 1);
     setImageList(newImageList);
   };
+
+  const handleMove = useCallback((dragIndex: number, hoverIndex: number) => {
+    setImageList((prevImageList: IImage[]) =>
+      update(prevImageList, {
+        $splice: [
+          [dragIndex, 1],
+          [hoverIndex, 0, prevImageList[dragIndex] as IImage],
+        ],
+      }),
+    );
+  }, []);
 
   return (
     <>
@@ -95,19 +133,11 @@ export default function ImageGalleryContent() {
           </Button>
         </div>
       </div>
-      <div style={{ height: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-        {filterImageList?.map((image, index) => {
-          return (
-            <ImageListItem
-              key={image.name}
-              url={image.url}
-              name={image.name}
-              type={image.type}
-              onDelete={() => handleDelete(index)}
-            />
-          );
-        })}
-      </div>
+      <DndProvider backend={HTML5Backend}>
+        <div style={{ height: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+          {imageList?.map((image, index) => renderImageItem(image, index))}
+        </div>
+      </DndProvider>
     </>
   );
 }
