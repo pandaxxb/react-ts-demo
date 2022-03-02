@@ -1,3 +1,7 @@
+.ant-card{
+  display: inline-block;
+  margin-right: 16px;
+}
 .ant-card-body{
   padding: 12px 8px;
 }

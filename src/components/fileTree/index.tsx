@@ -10,7 +10,7 @@ const FileTree: React.FC<IFileTreeProps> = ({ treeData, onSelect }) => {
     <DirectoryTree
       // blockNode={false}
       treeData={treeData}
-      onSelect={(keys: React.Key[]) => onSelect(keys[0] as string)}
+      onSelect={(keys: React.Key[], e: any) => onSelect(e.node)}
     />
   );
 };

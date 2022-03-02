@@ -1,9 +1,10 @@
 // import React from 'react'
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { IFileTree, IFolder } from '@/global';
 import { FolderAddOutlined } from '@ant-design/icons';
 import FileTree from '../../components/fileTree';
 import { Button } from 'antd';
+import { FolderContext } from './index';
 
 export default function ImageGallerySider() {
   const [folders, setFolders] = useState<IFolder[]>([
@@ -19,23 +20,29 @@ export default function ImageGallerySider() {
     },
   ]);
 
-  const [selectedTreeKey, setSelectedTreeKey] = useState<string>('');
-
   const treeData: IFileTree[] = useMemo(() => {
     const transform: any = (arr: IFolder[]) => {
       return arr.map((folder) => ({
         title: `${folder.name}(${folder.imageCount})`,
         key: folder.id + '',
         isLeaf: false,
+        sourceData: {
+          id: folder.id,
+          name: folder.name,
+          imageCount: folder.imageCount,
+        },
         children: transform(folder.children ?? []),
       }));
     };
     return transform(folders);
   }, [folders]);
 
+  const { selectedFolder, updateSelectedFolder } =
+    React.useContext(FolderContext);
+
   const addFolder = () => {
     const newFolders: IFolder[] = folders.slice();
-    if (selectedTreeKey === '') {
+    if (selectedFolder.id === -1) {
       newFolders.push({
         id: folders[folders.length - 1].id + 1,
         name: '新建文件夹',
@@ -68,15 +75,9 @@ export default function ImageGallerySider() {
           }
         });
       };
-      traverse(newFolders, Number(selectedTreeKey));
+      traverse(newFolders, selectedFolder.id);
     }
     setFolders(newFolders);
-  };
-
-  const onSelect = (key: string) => {
-    if (key !== selectedTreeKey) {
-      setSelectedTreeKey(key);
-    }
   };
 
   return (
@@ -89,7 +90,7 @@ export default function ImageGallerySider() {
       >
         新建文件夹
       </Button>
-      <FileTree treeData={treeData} onSelect={onSelect} />
+      <FileTree treeData={treeData} onSelect={updateSelectedFolder} />
     </div>
   );
 }

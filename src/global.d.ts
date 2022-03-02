@@ -9,10 +9,22 @@ export interface IFileTree {
   title: string;
   key: string;
   children?: IFileTree[];
+  sourceData: IFolder;
   isLeaf: boolean;
 }
 
 export interface IFileTreeProps {
   treeData: IFileTree[];
-  onSelect: (key: string) => void;
+  onSelect: (node: any) => void;
 }
+
+export interface IImage {
+  url: string;
+  name: string;
+  type: 'jpg' | 'png' | 'jpeg';
+}
+
+export type IImageProps = {
+  onDelete: () => void;
+  onRename?: () => void;
+} & IImage;

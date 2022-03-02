@@ -1,22 +1,30 @@
 import React from 'react';
 import { Card, Space, Button, Divider } from 'antd';
+import type { IImageProps } from '@/global';
 
 const { Meta } = Card;
 
-const ImageWrapper: React.FC<{}> = () => {
+const ImageListItem: React.FC<IImageProps> = ({
+  url,
+  name,
+  type,
+  onDelete,
+}) => {
   return (
     <Card
       style={{ width: 200 }}
       bordered={false}
-      cover={<img alt="image" src="https://picsum.photos/200/200?random=1g" />}
+      cover={<img alt="image" src={url} />}
     >
-      <Meta title="image 1" />
+      <Meta title={`${name}.${type}`} />
       <Space split={<Divider type="vertical" />}>
         <Button type="link">重命名</Button>
-        <Button type="link">删除</Button>
+        <Button type="link" onClick={onDelete}>
+          删除
+        </Button>
       </Space>
     </Card>
   );
 };
 
-export default ImageWrapper;
+export default ImageListItem;
