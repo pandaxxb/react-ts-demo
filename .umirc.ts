@@ -5,7 +5,10 @@ export default defineConfig({
     type: 'none',
   },
   routes: [
-    { path: '/', component: '@/pages/index' },
+    { path: '/image-gallery', component: '@/pages/image-gallery/index' },
   ],
+  alias: {
+    components: 'src/components',
+  },
   fastRefresh: {},
 });

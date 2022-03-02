@@ -8,22 +8,15 @@ const ImageWrapper: React.FC<{}> = () => {
     <Card
       style={{ width: 200 }}
       bordered={false}
-      cover={
-        <img
-          alt='image'
-          src='https://picsum.photos/200/200?random=1g'
-        ></img>
-      }
+      cover={<img alt="image" src="https://picsum.photos/200/200?random=1g" />}
     >
-      <Meta
-        title='image 1'
-      ></Meta>
-      <Space split={<Divider type='vertical'></Divider>}>
-        <Button type='link'>重命名</Button>
-        <Button type='link'>删除</Button>
+      <Meta title="image 1" />
+      <Space split={<Divider type="vertical" />}>
+        <Button type="link">重命名</Button>
+        <Button type="link">删除</Button>
       </Space>
     </Card>
-  )
-}
+  );
+};
 
-export default ImageWrapper
+export default ImageWrapper;
