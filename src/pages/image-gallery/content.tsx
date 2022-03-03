@@ -7,9 +7,9 @@ import {
   useCallback,
 } from 'react';
 import ImageListItem from '@/components/ImageListItem';
-import type { IImage } from '@/global';
+import type { IFolder, IFolderTree, IImage } from '@/global';
 import { FolderContext } from './index';
-import { Button, Input } from 'antd';
+import { Button, Input, Modal, Form, TreeSelect, message } from 'antd';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import update from 'immutability-helper';
@@ -20,18 +20,67 @@ export default function ImageGalleryContent() {
   const [imageList, setImageList] = useState<IImage[]>([]);
 
   const [searchKeyword, setSearchKeyword] = useState<string>('');
-  const searchRef = useRef(null);
+  const searchRef = useRef<any>();
+  const imageUploadRef = useRef<any>();
+
+  const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+  const [folderTreeData, setFolderTreeData] = useState<IFolderTree[]>();
+  const [editImageIndex, setEditImageIndex] = useState<number>();
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (isEditModalVisible) {
+      const transform: any = (folders: IFolder[]) => {
+        return folders.map((folder) => ({
+          value: folder.id,
+          title: folder.name,
+          children: transform(folder.children || []),
+        }));
+      };
+      setFolderTreeData(
+        transform(JSON.parse(localStorage.getItem('folders') || '')),
+      );
+    }
+  }, [isEditModalVisible]);
+
+  const renderEditModal = () => {
+    return (
+      <Modal
+        title='移动图片'
+        visible={isEditModalVisible}
+        onCancel={() => setIsEditModalVisible(false)}
+        onOk={handleImageEdit}
+      >
+        <Form form={form}>
+          <Form.Item required label='目标文件夹' name='targetFolder'>
+            <TreeSelect
+              // value={selectedFolder.id}
+              treeData={folderTreeData}
+            ></TreeSelect>
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  };
 
   const { selectedFolder } = useContext(FolderContext);
 
   const filterImageList = useMemo(() => {
-    return imageList.filter((image) => {
-      return image.name.includes(searchKeyword.trim());
-    });
+    return imageList
+      .map((image: IImage, index: number) => ({
+        ...image,
+        index,
+      }))
+      .filter((image) => {
+        return image.name.includes(searchKeyword.trim());
+      });
   }, [imageList, searchKeyword]);
 
   useEffect(() => {
     if (selectedFolder.id !== -1) {
+      form.setFieldsValue({
+        targetFolder: selectedFolder.id,
+      });
       setImageList(
         Array(Math.ceil(Math.random() * 20) + 5)
           .fill(1)
@@ -52,21 +101,29 @@ export default function ImageGalleryContent() {
     }
   }, [selectedFolder]);
 
-  const handleAdd = () => {
-    const newImageList = imageList.slice();
-    newImageList.push({
-      url: `https://picsum.photos/200/200?random=${selectedFolder.id}${
-        newImageList.length + 1
-      }`,
-      id: `${selectedFolder.id}${newImageList.length + 1}`,
-      name: `图片${newImageList.length + 1}`,
-      type: Math.random() < 0.33 ? 'jpg' : Math.random() < 0.5 ? 'png' : 'jpeg',
-    });
-    setImageList(newImageList);
-    return;
+  const handleUpload = () => {
+    imageUploadRef.current.click();
   };
 
-  const renderImageItem = useCallback((image, index) => {
+  const handleAdd = (e: any) => {
+    const newImageList = imageList.slice();
+    const files = e.target.files;
+    files.forEach((file: any) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newImageList.push({
+          url: (e.target?.result as string) || '',
+          id: `${selectedFolder.id}${newImageList.length + 1}`,
+          name: `图片${newImageList.length + 1}`,
+          type: file.type,
+        });
+        setImageList(newImageList);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const renderImageItem = useCallback((image) => {
     return (
       <ImageListItem
         key={image.id}
@@ -74,9 +131,10 @@ export default function ImageGalleryContent() {
         name={image.name}
         type={image.type}
         id={image.id}
-        index={index}
+        index={image.index}
         onMove={handleMove}
-        onDelete={() => handleDelete(index)}
+        onEdit={() => handleEdit(image.index)}
+        onDelete={() => handleDelete(image.index)}
       />
     );
   }, []);
@@ -98,8 +156,28 @@ export default function ImageGalleryContent() {
     );
   }, []);
 
+  const handleEdit = useCallback((index: number) => {
+    setEditImageIndex(index);
+    setIsEditModalVisible(true);
+  }, []);
+
+  const handleImageEdit = () => {
+    if (form.getFieldValue('targetFolder') !== selectedFolder.id) {
+      handleDelete(editImageIndex ?? -1);
+      message.success('图片移动成功');
+    }
+    setIsEditModalVisible(false);
+  };
+
   return (
     <>
+      <input
+        type='file'
+        accept='.jpg, .jpeg, .png'
+        ref={imageUploadRef}
+        style={{ display: 'none' }}
+        onChange={handleAdd}
+      ></input>
       <div
         style={{
           marginBottom: 16,
@@ -117,27 +195,32 @@ export default function ImageGalleryContent() {
         >
           <Search
             allowClear
-            placeholder="输入名称进行搜索"
+            placeholder='输入名称进行搜索'
             style={{ width: 200, marginRight: 8 }}
             onPressEnter={(e: any) => setSearchKeyword(e.target.value)}
             onSearch={(val) => setSearchKeyword(val)}
             ref={searchRef}
-            // onBlur={() => {
-            //   if (searchRef && searchRef.current) {
-            //     searchRef.current = searchKeyword;
-            //   }
-            // }}
+            onBlur={() => {
+              if (searchRef && searchRef.current) {
+                searchRef.current.state.value = searchKeyword;
+              }
+            }}
           />
-          <Button type="primary" onClick={handleAdd}>
+          <Button
+            type='primary'
+            onClick={handleUpload}
+            disabled={selectedFolder.id === -1}
+          >
             上传图片
           </Button>
         </div>
       </div>
       <DndProvider backend={HTML5Backend}>
         <div style={{ height: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-          {imageList?.map((image, index) => renderImageItem(image, index))}
+          {filterImageList.map((image) => renderImageItem(image))}
         </div>
       </DndProvider>
+      {renderEditModal()}
     </>
   );
 }

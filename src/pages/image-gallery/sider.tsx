@@ -1,9 +1,9 @@
 // import React from 'react'
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { IFileTree, IFolder } from '@/global';
 import { FolderAddOutlined } from '@ant-design/icons';
 import FileTree from '../../components/fileTree';
-import { Button } from 'antd';
+import { Button, Modal, Input, Form, message } from 'antd';
 import { FolderContext } from './index';
 
 export default function ImageGallerySider() {
@@ -37,15 +37,24 @@ export default function ImageGallerySider() {
     return transform(folders);
   }, [folders]);
 
+  useEffect(() => {
+    localStorage.setItem('folders', JSON.stringify(folders));
+  }, [folders]);
+
   const { selectedFolder, updateSelectedFolder } =
     React.useContext(FolderContext);
 
-  const addFolder = () => {
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+
+  const [form] = Form.useForm();
+
+  const handleOk = () => {
+    const folderName = form.getFieldValue('folderName');
     const newFolders: IFolder[] = folders.slice();
     if (selectedFolder.id === -1) {
       newFolders.push({
         id: folders[folders.length - 1].id + 1,
-        name: '新建文件夹',
+        name: folderName,
         imageCount: Math.floor(Math.random() * 30),
       });
     } else {
@@ -56,7 +65,7 @@ export default function ImageGallerySider() {
               e.children = [
                 {
                   id: e.id * 100 + 1,
-                  name: '新建文件夹',
+                  name: folderName,
                   imageCount: Math.floor(Math.random() * 30),
                 },
               ];
@@ -64,7 +73,7 @@ export default function ImageGallerySider() {
             } else {
               e.children.push({
                 id: e.children[e.children.length - 1].id + 1,
-                name: '新建文件夹',
+                name: folderName,
                 imageCount: Math.floor(Math.random() * 30),
               });
             }
@@ -78,6 +87,40 @@ export default function ImageGallerySider() {
       traverse(newFolders, selectedFolder.id);
     }
     setFolders(newFolders);
+    setIsModalVisible(false);
+    message.success('文件夹新建成功');
+  };
+
+  const handleAdd = () => {
+    form.resetFields();
+    setIsModalVisible(true);
+  };
+
+  const renderAddFolderModal = () => {
+    return (
+      <Modal
+        title="新建文件夹"
+        visible={isModalVisible}
+        onOk={() => form.validateFields().then(() => handleOk())}
+        onCancel={() => setIsModalVisible(false)}
+      >
+        <Form form={form}>
+          <Form.Item
+            required
+            label="文件夹名"
+            name="folderName"
+            rules={[
+              {
+                required: true,
+                message: '文件夹名不能为空',
+              },
+            ]}
+          >
+            <Input maxLength={10}></Input>
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
   };
 
   return (
@@ -86,11 +129,12 @@ export default function ImageGallerySider() {
         type="default"
         style={{ marginBottom: 16 }}
         icon={<FolderAddOutlined />}
-        onClick={addFolder}
+        onClick={handleAdd}
       >
         新建文件夹
       </Button>
       <FileTree treeData={treeData} onSelect={updateSelectedFolder} />
+      {renderAddFolderModal()}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import type { XYCoord, Identifier } from 'dnd-core';
 
 const { Meta } = Card;
 
-interface DragItem {
+interface IDragItem {
   index: number;
   id: string;
   type: string;
@@ -20,10 +20,11 @@ const ImageListItem: React.FC<IImageProps> = ({
   index,
   id,
   onMove,
+  onEdit,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [{ handlerId }, drop] = useDrop<
-    DragItem,
+    IDragItem,
     void,
     { handlerId: Identifier | null }
   >({
@@ -33,16 +34,13 @@ const ImageListItem: React.FC<IImageProps> = ({
         handlerId: monitor.getHandlerId(),
       };
     },
-    hover(item: DragItem, monitor) {
+    hover(item: IDragItem, monitor) {
       // console.log(ref.current);
       if (!ref.current) {
         return;
       }
       const dragIndex = item.index;
       const hoverIndex = index;
-
-      console.log('drag: ', dragIndex);
-      console.log('hover: ', hoverIndex);
 
       // Don't replace items with themselves
       if (dragIndex === hoverIndex) {
@@ -68,8 +66,6 @@ const ImageListItem: React.FC<IImageProps> = ({
       const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
 
       const hoverClientX = (clientOffset as XYCoord).x - hoverBoundingRect.left;
-
-      console.log(hoverClientY);
 
       // Only perform the move when the mouse has crossed half of the items height
       // When dragging downwards, only move when the cursor is below 50%
@@ -133,7 +129,9 @@ const ImageListItem: React.FC<IImageProps> = ({
       >
         <Meta title={`${name}.${type}`} />
         <Space split={<Divider type="vertical" />}>
-          <Button type="link">重命名</Button>
+          <Button type="link" onClick={onEdit}>
+            移动
+          </Button>
           <Button type="link" onClick={onDelete}>
             删除
           </Button>

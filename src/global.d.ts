@@ -30,4 +30,11 @@ export type IImageProps = {
   onRename?: () => void;
   index: number;
   onMove: (dragIndex: number, hoverIndex: number) => void;
+  onEdit: () => void;
 } & IImage;
+
+export interface IFolderTree {
+  value: number;
+  title: string;
+  children?: IFileTree[];
+}
