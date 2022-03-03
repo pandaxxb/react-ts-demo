@@ -6,6 +6,7 @@ export default defineConfig({
   },
   routes: [
     { path: '/image-gallery', component: '@/pages/image-gallery/index' },
+    { path: '/user', component: '@/pages/user/index' },
   ],
   alias: {
     components: 'src/components',

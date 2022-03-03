@@ -38,3 +38,11 @@ export interface IFolderTree {
   title: string;
   children?: IFileTree[];
 }
+
+export interface IUser {
+  id: number;
+  name: string;
+  phone: string;
+  roleId: number;
+  roleDesc: string;
+}
