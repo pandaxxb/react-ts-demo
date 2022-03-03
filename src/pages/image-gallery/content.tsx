@@ -139,11 +139,13 @@ export default function ImageGalleryContent() {
     );
   }, []);
 
-  const handleDelete = (index: number) => {
-    const newImageList = imageList.slice();
-    newImageList?.splice(index, 1);
-    setImageList(newImageList);
-  };
+  const handleDelete = useCallback((index: number) => {
+    setImageList((prevImageList: IImage[]) => {
+      const newImageList = prevImageList.slice();
+      newImageList.splice(index, 1);
+      return newImageList;
+    });
+  }, []);
 
   const handleMove = useCallback((dragIndex: number, hoverIndex: number) => {
     setImageList((prevImageList: IImage[]) =>

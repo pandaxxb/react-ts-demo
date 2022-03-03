@@ -139,7 +139,7 @@ export default function UserIndex() {
     setTableData(userList);
   };
 
-  const dataSource: IUser[] = Array(10)
+  const dataSource: IUser[] = Array(35)
     .fill(1)
     .map((_, index) => {
       const random = Math.random();
@@ -185,6 +185,7 @@ export default function UserIndex() {
       title: '操作',
       key: 'action',
       fixed: 'right',
+      width: 150,
       render: (_: any, record: any, index) => (
         <Space size='middle'>
           <a key='edit' onClick={() => handleEdit(record)}>
@@ -219,6 +220,16 @@ export default function UserIndex() {
         bordered
         dataSource={tableData}
         columns={columns}
+        scroll={{
+          y: `calc(100vh - 200px)`,
+        }}
+        pagination={{
+          position: ['bottomCenter'],
+          showTotal: (total) => `共${total}条`,
+          defaultPageSize: 20,
+          defaultCurrent: 1,
+          showSizeChanger: true,
+        }}
       ></Table>
     </div>
   );
